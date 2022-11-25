@@ -1,0 +1,183 @@
+﻿Build1=Default,B4RDev
+Group=Default Group
+Library1=rcore
+Library2=resp8266wifi
+NumberOfFiles=0
+NumberOfLibraries=2
+NumberOfModules=0
+Version=3.9
+@EndOfDesignText@
+
+#Region Project Attributes
+	#AutoFlushLogs: True
+	#CheckArrayBounds: True
+	#StackBufferSize: 600
+#End Region
+'Ctrl+Click to open the C code folder: ide://run?File=%WINDIR%\System32\explorer.exe&Args=%PROJECT%\Objects\Src
+
+Sub Process_Globals
+	Public Serial1 As Serial
+	Private wifi As ESP8266WiFi 
+	'Private WiFiConnect As ESP8266WiFi
+	
+	Dim btn1, btn2 As Pin
+	Dim IsPress1,IsPress2 As Boolean = False
+	
+End Sub
+
+Private Sub AppStart
+	Serial1.Initialize(115200)		'擺在第一行
+	Log("****************************************************")
+	Log("AppStart==>")	
+	
+	
+	btn1.Initialize(0, btn1.MODE_INPUT_PULLUP)
+	btn2.Initialize(35, btn2.MODE_INPUT_PULLUP)
+	'
+	RunNative("setup", Null)		
+	
+
+	RunNative("cleardisplay", Null)'清除畫面
+	RunNative("title", "B4R")	
+	RunNative("connected", JoinStrings(Array As String("Connected = ", "Wait...")))
+	'
+	
+	'example of connecting to a local network
+	If wifi.Connect2("NewPos_3F_RPT", "ho123456789") Then
+		Log("Connected to network")
+		
+		RunNative("cleardisplay", Null)
+		RunNative("title", "B4R")
+		RunNative("connected", JoinStrings(Array As String("Connected = ", wifi.IsConnected)))
+		RunNative("localip", JoinStrings(Array As String("", wifi.LocalIp)))
+	Else
+		Log("Failed to connect to network")
+		
+		RunNative("cleardisplay", Null)
+		RunNative("title", "B4R")
+		RunNative("connected", JoinStrings(Array As String("Connected = ", WiFi.IsConnected)))
+		'RunNative("localip", JoinStrings(Array As String("", WiFi.IsConnected)))
+	End If
+	
+	
+	AddLooper("B4Rloop")
+End Sub
+
+
+Sub B4Rloop
+	
+	If btn1.DigitalRead = False Then
+		IsPress1 = True
+		'Log("btn1.DigitalRead=False ")
+	Else
+		If IsPress1 = True Then
+			IsPress1 = False
+			RunNative("test1", Null)
+		End If
+		'Log("btn1.DigitalRead=True ")
+	End If
+	
+	If btn2.DigitalRead = False Then
+		IsPress2 = True
+	Else
+		If IsPress2 = True Then
+			IsPress2 = False
+			RunNative("test2", Null)
+		End If
+			
+	End If
+
+End Sub
+
+
+
+'inline C
+#if c
+#include <TFT_eSPI.h>        //LCD函式庫
+ 
+
+TFT_eSPI tft = TFT_eSPI(); 
+ 
+void setup(B4R::Object* unused)
+{
+  tft.begin();               // 初始化LCD
+  tft.setRotation(1);  // landscape
+
+	  tft.setFreeFont(&FreeSerifBold24pt7b);  //設定字型，請參考Adafruit GFX函式庫的資料	
+}
+void cleardisplay(B4R::Object* unused)
+{
+  tft.fillScreen(TFT_BLACK); // 用全黑清除螢幕
+}
+
+
+void title(B4R::Object* String)
+{
+	const char* Text = (const char*)String->data.PointerField;	
+
+
+      tft.setFreeFont(&FreeSerifBold24pt7b);
+      tft.setCursor(30, 50);
+      tft.setTextColor(TFT_WHITE);
+      tft.setTextSize(1);
+      tft.printf(Text);
+ 
+
+}
+void connected(B4R::Object* String)
+{
+    const char* Text = (const char*)String->data.PointerField;
+
+	tft.setFreeFont(&FreeSerifBold12pt7b);	
+	tft.setCursor(10, 90);
+	tft.setTextColor(TFT_YELLOW);
+	tft.setTextSize(1);
+	tft.printf(Text);
+	
+	//tft.drawString(Text, 10, 50);
+	
+}
+
+void localip(B4R::Object* String)
+{
+    const char* Text = (const char*)String->data.PointerField;
+
+	tft.setFreeFont(&FreeSerifBold12pt7b);	
+	tft.setCursor(10, 120);
+	tft.setTextColor(TFT_YELLOW);
+	tft.setTextSize(1);
+	tft.printf(Text);
+	
+	//tft.drawString(Text, 10, 50);
+	
+}
+
+void test1(B4R::Object* unused){
+
+      tft.fillScreen(TFT_BLACK); // 用全黑清除螢幕
+      tft.setFreeFont(&FreeSerifBold24pt7b);
+      tft.setCursor(30, 60);
+      tft.setTextColor(TFT_WHITE);
+      tft.setTextSize(1);
+      tft.printf("ButtonA");
+ 
+
+}
+
+void test2(B4R::Object* unused){
+
+      tft.fillScreen(TFT_BLACK); // 用全黑清除螢幕
+      tft.setFreeFont(&FreeSerifBold24pt7b);
+      tft.setCursor(30, 60);
+      tft.setTextColor(TFT_WHITE);
+      tft.setTextSize(1);
+      tft.printf("btn B");
+ 
+
+}
+
+ 
+
+#End If
+
+
